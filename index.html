@@ -3,103 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Global Radio Sphere - Modern</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Global Radio Sphere</title>
     <script src="https://unpkg.com/globe.gl"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-        
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            background-color: #050505; 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
+        /* --- RESET & BASE --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+            overflow: hidden;
             touch-action: none;
+            -webkit-font-smoothing: antialiased;
         }
-        #globe-viz { 
-            width: 100vw; 
-            height: 100vh; 
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        .glass-panel {
+
+        /* --- GLOBE --- */
+        #globe-viz { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* --- GLASSMORPHISM --- */
+        .glass {
             background: rgba(20, 20, 25, 0.65);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
-        .glass-button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .glass-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-1px);
-        }
-        .glass-button:active {
-            transform: scale(0.95);
-        }
+
+        /* --- LAYOUT UTILITIES --- */
+        .fixed { position: fixed; }
+        .absolute { position: absolute; }
+        .relative { position: relative; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .z-10 { z-index: 10; }
+        .z-30 { z-index: 30; }
+        .z-40 { z-index: 40; }
+        .z-50 { z-index: 50; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .w-full { width: 100%; }
+        .min-w-0 { min-width: 0; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        .pointer-events-none { pointer-events: none; }
+        .cursor-pointer { cursor: pointer; }
+        .hidden { display: none !important; }
+
+        /* --- SPACING --- */
+        .top-4 { top: 16px; } .right-4 { right: 16px; } .bottom-6 { bottom: 24px; }
+        .left-4 { left: 16px; } .right-6 { right: 24px; } .bottom-2 { bottom: 8px; }
+        .mb-1 { margin-bottom: 4px; } .mb-2 { margin-bottom: 8px; } .mb-4 { margin-bottom: 16px; }
+        .mb-6 { margin-bottom: 24px; } .mt-1 { margin-top: 4px; } .mt-1-5 { margin-top: 6px; }
+        .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mt-6 { margin-top: 24px; }
+        .ml-0-5 { margin-left: 2px; }
+        .gap-1-5 { gap: 6px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+        .p-1-5 { padding: 6px; } .p-2 { padding: 8px; } .p-3 { padding: 12px; }
+        .p-4 { padding: 16px; } .p-5 { padding: 20px; } .p-6 { padding: 24px; }
+
+        /* --- DIMENSIONS & SHAPES --- */
+        .w-4, .h-4 { width: 16px; height: 16px; }
+        .w-5, .h-5 { width: 20px; height: 20px; }
+        .w-6, .h-6 { width: 24px; height: 24px; }
+        .w-8, .h-8 { width: 32px; height: 32px; }
+        .w-10, .h-10 { width: 40px; height: 40px; }
+        .w-16, .h-16 { width: 64px; height: 64px; }
+        .w-32, .h-32 { width: 128px; height: 128px; }
+        .rounded-full { border-radius: 9999px; }
+        .rounded-lg { border-radius: 8px; }
+        .rounded-xl { border-radius: 12px; }
+        .rounded-2xl { border-radius: 16px; }
+        .rounded-3xl { border-radius: 24px; }
+
+        /* --- TYPOGRAPHY --- */
+        .text-xs { font-size: 12px; }
+        .text-sm { font-size: 14px; }
+        .text-lg { font-size: 18px; }
+        .text-xl { font-size: 20px; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .text-center { text-align: center; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-wide { letter-spacing: 0.025em; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* Animasi equalizer */
-        .playing-animation {
-            display: flex;
-            align-items: flex-end;
-            height: 18px;
-            gap: 2px;
+        .text-white { color: #ffffff; }
+        .text-gray-400 { color: #9ca3af; }
+        .text-gray-500 { color: #6b7280; }
+        .text-gray-600 { color: #4b5563; }
+        .text-red-400 { color: #f87171; }
+        .text-red-500 { color: #ef4444; }
+        .text-blue-400 { color: #60a5fa; }
+        .text-indigo-400 { color: #818cf8; }
+        .text-green-400 { color: #4ade80; }
+
+        /* --- BACKGROUNDS & BORDERS --- */
+        .bg-slate-800-50 { background: rgba(30, 41, 59, 0.5); }
+        .bg-white-5 { background: rgba(255, 255, 255, 0.05); }
+        .bg-red-500-10 { background: rgba(239, 68, 68, 0.1); }
+        .bg-blue-500-20 { background: rgba(59, 130, 246, 0.2); }
+        .bg-indigo-500-20 { background: rgba(99, 102, 241, 0.2); }
+        .border-white-5 { border-color: rgba(255, 255, 255, 0.05); }
+        .border-white-10 { border-color: rgba(255, 255, 255, 0.1); }
+        .border-red-500-20 { border-color: rgba(239, 68, 68, 0.2); }
+
+        /* --- SHADOWS --- */
+        .shadow-inner { box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2); }
+        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .shadow-red { box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3); }
+
+        /* --- COMPONENTS --- */
+        .search-container {
+            position: fixed; top: 16px; left: 16px; right: 16px; z-index: 40; max-width: 448px;
         }
+        @media (min-width: 768px) { .search-container { left: 32px; right: auto; } }
+        
+        .search-box { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 16px; }
+        .search-input {
+            background: transparent; border: none; outline: none; color: white; width: 100%;
+            font-size: 14px; font-weight: 500; padding: 10px;
+        }
+        .search-input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .btn-icon {
+            flex-shrink: 0; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-random { background: #dc2626; color: white; box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3); }
+        .btn-random:hover { background: #ef4444; }
+        .btn-random:active { transform: scale(0.95); }
+
+        .btn-play {
+            background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-radius: 9999px;
+            padding: 14px; border: none; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.3);
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .btn-play:hover { background: linear-gradient(135deg, #f87171, #ef4444); }
+        .btn-play:active { transform: scale(0.95); }
+
+        .btn-close {
+            position: absolute; top: 16px; right: 16px; color: #9ca3af; background: transparent;
+            border: none; cursor: pointer; padding: 8px; border-radius: 9999px; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+        .btn-close:hover { color: white; background: rgba(255,255,255,0.1); }
+
+        .info-panel {
+            position: fixed; bottom: 24px; left: 16px; right: 16px; z-index: 40; max-width: 320px;
+            border-radius: 24px; padding: 20px; transform: translateY(150%);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden;
+        }
+        @media (min-width: 768px) { .info-panel { left: 32px; right: auto; } }
+        .info-panel.active { transform: translateY(0); }
+
+        .fab-donate {
+            position: fixed; bottom: 24px; right: 16px; z-index: 40;
+            background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 16px; cursor: pointer; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+        }
+        @media (min-width: 768px) { .fab-donate { right: 32px; } }
+        .fab-donate:hover { background: linear-gradient(135deg, #374151, #1f2937); transform: translateY(-2px); }
+        .fab-donate:active { transform: scale(0.95); }
+        .fab-donate svg { color: #ef4444; transition: transform 0.3s ease; }
+        .fab-donate:hover svg { transform: scale(1.1); }
+
+        .modal-backdrop {
+            position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease; padding: 16px;
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 24px;
+            width: 100%; max-width: 448px; position: relative; transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1) translateY(0); }
+
+        .donation-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s ease; margin-bottom: 12px;
+        }
+        .donation-item:last-child { margin-bottom: 0; }
+        .donation-item:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); }
+        .donation-item:active { transform: scale(0.98); }
+
+        /* --- ANIMATIONS --- */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.05); border-top-color: #ef4444;
+            border-radius: 50%; width: 48px; height: 48px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .playing-animation { display: flex; align-items: flex-end; height: 18px; gap: 2px; }
         .playing-animation span {
-            width: 3px;
-            background: #ef4444;
-            border-radius: 2px;
+            width: 3px; background: #ef4444; border-radius: 2px;
             animation: bounce 0.8s infinite ease-in-out;
         }
         .playing-animation span:nth-child(2) { animation-delay: 0.1s; }
         .playing-animation span:nth-child(3) { animation-delay: 0.2s; }
         .playing-animation span:nth-child(4) { animation-delay: 0.3s; }
-        
-        @keyframes bounce {
-            0%, 100% { height: 3px; }
-            50% { height: 16px; }
-        }
+        @keyframes bounce { 0%, 100% { height: 3px; } 50% { height: 16px; } }
 
-        .loader {
-            border: 3px solid rgba(255,255,255,0.05);
-            border-top-color: #ef4444;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Modal Transitions */
-        .modal-backdrop {
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        .modal-backdrop.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .modal-content {
-            transform: scale(0.95) translateY(10px);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .modal-backdrop.active .modal-content {
-            transform: scale(1) translateY(0);
-        }
+        .transition-opacity { transition: opacity 0.3s ease; }
+        .duration-700 { transition-duration: 700ms; }
     </style>
 </head>
 <body>
 
     <!-- Loading Overlay -->
-    <div id="loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050505] text-white transition-opacity duration-700">
+    <div id="loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-700" style="background-color: #050505;">
         <div class="loader mb-6"></div>
         <p class="text-sm text-gray-300 tracking-wide font-medium">Menyiarkan frekuensi global...</p>
         <p class="text-xs text-gray-600 mt-2" id="loading-detail">Menghubungkan ke server</p>
@@ -109,15 +229,15 @@
     <div id="globe-viz"></div>
 
     <!-- Top Search Bar -->
-    <div class="fixed top-4 left-4 right-4 md:left-8 md:right-auto md:w-[28rem] z-40">
-        <div class="glass-panel rounded-2xl p-1.5 flex items-center gap-2">
-            <div class="pl-3 pr-2 text-gray-400">
+    <div class="search-container">
+        <div class="glass search-box">
+            <div class="pl-3 pr-2 text-gray-400 flex-shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" id="search-input" placeholder="Cari negara, kota, atau genre..." class="bg-transparent border-none outline-none text-white w-full placeholder-gray-500 text-sm font-medium py-2.5">
-            <button id="random-btn" class="flex-shrink-0 bg-red-600 hover:bg-red-500 text-white p-3 rounded-xl shadow-lg shadow-red-600/20 transition-all duration-200 active:scale-95" title="Putar Acak">
+            <input type="text" id="search-input" placeholder="Cari negara, kota, atau genre..." class="search-input">
+            <button id="random-btn" class="btn-icon btn-random" title="Putar Acak">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
                 </svg>
@@ -126,71 +246,68 @@
     </div>
 
     <!-- Station Info Bottom Sheet -->
-    <div id="info-panel" class="fixed bottom-6 left-4 right-4 md:left-8 md:w-80 md:right-auto z-40 transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1)">
-        <div class="glass-panel rounded-3xl p-5 text-white relative overflow-hidden">
-            <!-- Decorative gradient blob -->
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-red-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div id="info-panel" class="info-panel glass">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-red-500-10 rounded-full pointer-events-none" style="filter: blur(40px);"></div>
 
-            <button id="close-panel" class="absolute top-4 right-4 text-gray-400 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors z-10">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+        <button id="close-panel" class="btn-close">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+        
+        <div class="flex items-start gap-4 relative z-10">
+            <img id="station-favicon" src="" alt="logo" class="w-16 h-16 rounded-2xl bg-slate-800-50 object-contain p-3 border border-white-5 shadow-inner flex-shrink-0">
+            <div class="flex-1 min-w-0 pr-6">
+                <h3 id="station-name" class="font-bold text-lg truncate text-white" style="line-height: 1.2;">Nama Stasiun</h3>
+                <p class="text-sm text-gray-400 flex items-center gap-1-5 mt-1-5">
+                    <svg class="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span id="station-country-text" class="truncate font-medium">Negara</span>
+                </p>
+                <p id="station-tags" class="text-xs text-red-400 mt-2 truncate font-medium tracking-wide uppercase">tags</p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-white-5 pt-4 mt-6 relative z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                <div id="playing-indicator" class="playing-animation hidden flex-shrink-0">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+                <span id="status-text" class="text-xs text-gray-400 font-medium truncate">Siap diputar</span>
+            </div>
             
-            <div class="flex items-start gap-4 relative z-10">
-                <img id="station-favicon" src="" alt="logo" class="w-16 h-16 rounded-2xl bg-slate-800/50 object-contain p-3 border border-white/5 shadow-inner flex-shrink-0">
-                <div class="flex-1 min-w-0 pr-6">
-                    <h3 id="station-name" class="font-bold text-lg leading-tight truncate text-white">Nama Stasiun</h3>
-                    <p class="text-sm text-gray-400 flex items-center gap-1.5 mt-1.5">
-                        <svg class="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <span id="station-country-text" class="truncate font-medium">Negara</span>
-                    </p>
-                    <p id="station-tags" class="text-xs text-red-400/80 mt-2 truncate font-medium tracking-wide uppercase">tags</p>
-                </div>
-            </div>
-
-            <div class="mt-6 flex items-center justify-between border-t border-white/5 pt-4 relative z-10">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div id="playing-indicator" class="playing-animation hidden flex-shrink-0">
-                        <span></span><span></span><span></span><span></span>
-                    </div>
-                    <span id="status-text" class="text-xs text-gray-400 font-medium truncate">Siap diputar</span>
-                </div>
-                
-                <button id="play-btn" class="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 text-white rounded-full p-3.5 shadow-lg shadow-red-600/30 transition-all duration-200 flex-shrink-0 active:scale-95">
-                    <svg id="play-icon" class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    <svg id="pause-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                </button>
-            </div>
+            <button id="play-btn" class="btn-play">
+                <svg id="play-icon" class="w-6 h-6 ml-0-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <svg id="pause-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
         </div>
     </div>
 
-    <!-- Floating Action Button (FAB) for Credits/Donation -->
-    <button id="fab-donate" class="fixed bottom-6 right-4 md:right-8 z-40 bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white p-4 rounded-2xl shadow-2xl border border-white/10 transition-all duration-300 active:scale-95 group">
-        <svg class="w-6 h-6 text-red-500 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+    <!-- Floating Action Button (FAB) -->
+    <button id="fab-donate" class="fab-donate">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
         </svg>
     </button>
 
     <!-- Bottom Hint -->
-    <div class="fixed bottom-2 left-0 right-0 text-center text-gray-600 text-[10px] md:text-xs pointer-events-none z-30 uppercase tracking-[0.2em] font-semibold">
+    <div class="fixed bottom-2 left-0 right-0 text-center text-gray-600 text-xs pointer-events-none z-30 uppercase tracking-wider font-semibold" style="font-size: 10px; letter-spacing: 0.2em;">
         Klik titik merah untuk memutar
     </div>
 
     <!-- Donation & Credits Modal -->
-    <div id="donation-modal" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-        <div class="modal-content glass-panel rounded-3xl p-6 w-full max-w-md relative">
-            <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+    <div id="donation-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <button id="close-modal" class="btn-close">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
 
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                <div class="w-16 h-16 bg-red-500-10 border border-red-500-20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
@@ -200,7 +317,7 @@
             </div>
 
             <!-- Credits -->
-            <div class="bg-white/5 rounded-2xl p-4 mb-4 border border-white/5 text-center">
+            <div class="bg-white-5 rounded-2xl p-4 mb-4 border border-white-5 text-center">
                 <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Creativityright by</p>
                 <p class="text-white font-bold text-lg">Muhamad Thoriq</p>
                 <p class="text-red-400 text-sm font-medium">~ Cilegon ~ Indonesia ~</p>
@@ -208,30 +325,30 @@
 
             <!-- Donation Options -->
             <div class="space-y-3">
-                <div class="glass-button rounded-xl p-3 flex items-center justify-between group cursor-pointer" onclick="copyText('087888879016', 'copy-dana')">
+                <div class="donation-item" onclick="copyText('087888879016', 'copy-dana')">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-400 font-bold text-xs">DANA</div>
+                        <div class="w-10 h-10 bg-blue-500-20 rounded-lg flex items-center justify-center text-blue-400 font-bold text-xs">DANA</div>
                         <div class="text-left">
                             <p class="text-xs text-gray-500 font-medium">Transfer via DANA</p>
                             <p class="text-sm text-white font-semibold tracking-wide">087888879016</p>
                         </div>
                     </div>
-                    <span id="copy-dana" class="text-xs text-gray-400 group-hover:text-white transition-colors font-medium">Salin</span>
+                    <span id="copy-dana" class="text-xs text-gray-400 font-medium">Salin</span>
                 </div>
 
-                <div class="glass-button rounded-xl p-3 flex items-center justify-between group cursor-pointer" onclick="copyText('sanggadhaya@gmail.com', 'copy-paypal')">
+                <div class="donation-item" onclick="copyText('sanggadhaya@gmail.com', 'copy-paypal')">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-400 font-bold text-[10px]">PayPal</div>
-                        <div class="text-left">
+                        <div class="w-10 h-10 bg-indigo-500-20 rounded-lg flex items-center justify-center text-indigo-400 font-bold" style="font-size: 10px;">PayPal</div>
+                        <div class="text-left" style="min-width: 0;">
                             <p class="text-xs text-gray-500 font-medium">Transfer via PayPal</p>
-                            <p class="text-sm text-white font-semibold tracking-wide truncate max-w-[180px]">sanggadhaya@gmail.com</p>
+                            <p class="text-sm text-white font-semibold tracking-wide truncate" style="max-width: 180px;">sanggadhaya@gmail.com</p>
                         </div>
                     </div>
-                    <span id="copy-paypal" class="text-xs text-gray-400 group-hover:text-white transition-colors font-medium">Salin</span>
-                </div>
+                    <span id="copy-paypal" class="text-xs text-gray-400 font-medium">Salin</span>
+                </div</div>
             </div>
 
-            <p class="text-center text-[10px] text-gray-600 mt-6">Terima kasih atas dukungan Anda untuk menjaga proyek ini tetap hidup.</p>
+            <p class="text-center text-xs text-gray-600 mt-6">Terima kasih atas dukungan Anda untuk menjaga proyek ini tetap hidup.</p>
         </div>
     </div>
 
@@ -245,7 +362,6 @@
         let isPlaying = false;
         const audioPlayer = document.getElementById('audio-player');
 
-        // Fetch Data
         async function fetchRadioData() {
             const loadingDetail = document.getElementById('loading-detail');
             const endpoints = [
@@ -301,7 +417,7 @@
             } catch (error) {
                 document.getElementById('loading').innerHTML = `
                     <p class="text-red-400 font-semibold mb-2">Gagal memuat data</p>
-                    <button onclick="location.reload()" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm text-white transition-colors">Coba Lagi</button>
+                    <button onclick="location.reload()" class="btn-icon btn-random" style="padding: 12px 24px; border-radius: 8px;">Coba Lagi</button>
                 `;
             }
         }
@@ -317,7 +433,6 @@
                 .pointsData(stations)
                 .pointLat('lat')
                 .pointLng('lng')
-                // DOT KELIP MERAH: Default merah, saat diputar jadi putih bersinar
                 .pointColor(d => d.isPlaying ? '#ffffff' : '#ef4444') 
                 .pointAltitude(d => d.isPlaying ? 0.15 : 0.06)
                 .pointRadius(d => d.isPlaying ? 1.0 : 0.5)
@@ -327,7 +442,6 @@
                     globe.pointOfView({ lat: point.lat, lng: point.lng, altitude: 1.8 }, 1500);
                 })
                 .ringsData([])
-                // Efek gelombang merah
                 .ringColor(() => t => `rgba(239, 68, 68, ${1 - t})`) 
                 .ringMaxRadius(6)
                 .ringPropagationSpeed(4)
@@ -362,7 +476,7 @@
             favicon.src = point.favicon;
             favicon.onerror = () => { favicon.src = 'https://cdn-icons-png.flaticon.com/512/32/32223.png'; };
             
-            document.getElementById('info-panel').classList.remove('translate-y-[150%]');
+            document.getElementById('info-panel').classList.add('active');
             playAudio();
         }
 
@@ -479,7 +593,7 @@
         });
 
         document.getElementById('close-panel').addEventListener('click', () => {
-            document.getElementById('info-panel').classList.add('translate-y-[150%]');
+            document.getElementById('info-panel').classList.remove('active');
             audioPlayer.pause();
             isPlaying = false;
             if (currentStation) {
