@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Global & Asia Radio Sphere</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000; 
+            font-family: 'Inter', sans-serif; 
+            touch-action: none;
+        }
+        #globe-viz { 
+            width: 100vw; 
+            height: 100vh; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        .playing-animation {
+            display: flex;
+            align-items: flex-end;
+            height: 20px;
+            gap: 3px;
+        }
+        .playing-animation span {
+            width: 3px;
+            background: #10b981;
+            border-radius: 2px;
+            animation: bounce 0.8s infinite ease-in-out;
+        }
+        .playing-animation span:nth-child(2) { animation-delay: 0.1s; }
+        .playing-animation span:nth-child(3) { animation-delay: 0.2s; }
+        .playing-animation span:nth-child(4) { animation-delay: 0.3s; }
+        
+        @keyframes bounce {
+            0%, 100% { height: 4px; }
+            50% { height: 18px; }
+        }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-white transition-opacity duration-500">
+        <div class="loader mb-4"></div>
+        <p class="text-sm text-gray-400 tracking-wide text-center px-4">Memuat database radio Global & Asia...</p>
+        <p class="text-xs text-gray-600 mt-2" id="loading-detail">Menghubungkan ke server...</p>
+    </div>
+
+    <!-- 3D Globe Container -->
+    <div id="globe-viz"></div>
+
+    <!-- Top Search & Random Bar -->
+    <div class="fixed top-4 left-4 right-4 md:left-10 md:right-auto md:w-96 z-40">
+        <div class="glass-panel rounded-2xl p-2 flex items-center gap-2">
+            <svg class="w-5 h-5 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="search-input" placeholder="Cari: Indonesia, Jakarta, K-Pop, Jazz..." class="bg-transparent border-none outline-none text-white w-full placeholder-gray-500 text-sm">
+            <button id="random-btn" class="flex-shrink-0 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white p-2.5 rounded-xl transition-all duration-200" title="Putar Stasiun Acak">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Station Info Bottom Sheet -->
+    <div id="info-panel" class="fixed bottom-6 left-4 right-4 md:left-10 md:w-80 md:right-auto z-40 transform translate-y-[150%] transition-transform duration-500 cubic-bezier(0.16, 1, 0.3, 1)">
+        <div class="glass-panel rounded-2xl p-4 text-white relative">
+            <button id="close-panel" class="absolute top-3 right-3 text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            
+            <div class="flex items-start gap-4">
+                <img id="station-favicon" src="" alt="logo" class="w-14 h-14 rounded-xl bg-slate-800 object-contain p-2 border border-white/5 shadow-inner flex-shrink-0">
+                <div class="flex-1 min-w-0 pr-6">
+                    <h3 id="station-name" class="font-bold text-lg leading-tight truncate">Nama Stasiun</h3>
+                    <p class="text-sm text-gray-400 flex items-center gap-1.5 mt-1">
+                        <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span id="station-country-text" class="truncate">Negara</span>
+                    </p>
+                    <p id="station-tags" class="text-xs text-blue-400/80 mt-1.5 truncate font-medium">tags</p>
+                </div>
+            </div>
+
+            <div class="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div id="playing-indicator" class="playing-animation hidden flex-shrink-0">
+                        <span></span><span></span><span></span><span></span>
+                    </div>
+                    <span id="status-text" class="text-xs text-gray-400 font-medium truncate">Siap diputar</span>
+                </div>
+                
+                <button id="play-btn" class="bg-blue-600 hover:bg-blue-500 active:scale-95 text-white rounded-full p-3.5 shadow-lg shadow-blue-600/30 transition-all duration-200 flex-shrink-0">
+                    <svg id="play-icon" class="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    <svg id="pause-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Hint -->
+    <div class="fixed bottom-2 left-0 right-0 text-center text-gray-600 text-[10px] md:text-xs pointer-events-none z-30 uppercase tracking-widest font-semibold">
+        Klik titik untuk memutar • Geser untuk memutar globe
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="audio-player" crossorigin="anonymous" preload="none"></audio>
+
+    <script>
+        let globe;
+        let stations = [];
+        let currentStation = null;
+        let isPlaying = false;
+        const audioPlayer = document.getElementById('audio-player');
+
+        // Fungsi untuk mengambil data dari berbagai endpoint secara paralel
+        async function fetchRadioData() {
+            const loadingDetail = document.getElementById('loading-detail');
+            
+            // Daftar endpoint: Global Top + Negara-negara Asia spesifik (diurutkan berdasarkan vote tertinggi)
+            const endpoints = [
+                'https://all.api.radio-browser.info/json/stations/topvote/200',
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/ID?order=votes&reverse=true&limit=150', // Indonesia
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/MY?order=votes&reverse=true&limit=100', // Malaysia
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/SG?order=votes&reverse=true&limit=50',  // Singapore
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/PH?order=votes&reverse=true&limit=100', // Philippines
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/JP?order=votes&reverse=true&limit=100', // Japan
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/KR?order=votes&reverse=true&limit=100', // South Korea
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/IN?order=votes&reverse=true&limit=100', // India
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/TH?order=votes&reverse=true&limit=100', // Thailand
+                'https://all.api.radio-browser.info/json/stations/bycountrycodeexact/VN?order=votes&reverse=true&limit=100'  // Vietnam
+            ];
+
+            loadingDetail.textContent = 'Mengambil data dari 10 sumber regional...';
+            
+            // Fetch semua endpoint secara bersamaan (Promise.all)
+            const promises = endpoints.map(url => 
+                fetch(url)
+                    .then(res => res.ok ? res.json() : [])
+                    .catch(err => {
+                        console.warn(`Gagal memuat dari ${url}:`, err);
+                        return [];
+                    })
+            );
+
+            const results = await Promise.all(promises);
+            
+            // Gabungkan semua array hasil
+            const combined = results.flat();
+            
+            loadingDetail.textContent = 'Memproses dan menghapus duplikat...';
+            
+            // Hapus duplikat berdasarkan stationuuid
+            const uniqueMap = new Map();
+            combined.forEach(item => {
+                if (!uniqueMap.has(item.stationuuid)) {
+                    uniqueMap.set(item.stationuuid, item);
+                }
+            });
+            
+            const uniqueStations = Array.from(uniqueMap.values());
+            
+            loadingDetail.textContent = 'Memfilter stasiun dengan koordinat valid...';
+            
+            // Filter hanya yang memiliki koordinat dan URL stream yang valid
+            return uniqueStations.filter(s => s.geo_lat && s.geo_long && s.url_resolved);
+        }
+
+        // Inisialisasi aplikasi
+        async function init() {
+            try {
+                const rawData = await fetchRadioData();
+                
+                stations = rawData.map(s => ({
+                    lat: parseFloat(s.geo_lat),
+                    lng: parseFloat(s.geo_long),
+                    name: s.name,
+                    country: s.country || 'Lokasi Tidak Diketahui',
+                    countrycode: s.countrycode || '',
+                    url: s.url_resolved,
+                    favicon: s.favicon || 'https://cdn-icons-png.flaticon.com/512/32/32223.png',
+                    tags: s.tags || 'radio',
+                    isPlaying: false
+                }));
+
+                // Sembunyikan loading
+                const loadingEl = document.getElementById('loading');
+                loadingEl.style.opacity = '0';
+                setTimeout(() => { loadingEl.style.display = 'none'; }, 500);
+                
+                renderGlobe();
+            } catch (error) {
+                console.error('Error fetching stations:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p class="text-red-400 font-semibold mb-2">Gagal memuat data radio</p>
+                    <p class="text-xs text-gray-500 mb-4 text-center px-4">Pastikan Anda terhubung ke internet.</p>
+                    <button onclick="location.reload()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm text-white transition-colors">Coba Lagi</button>
+                `;
+            }
+        }
+
+        function renderGlobe() {
+            const elem = document.getElementById('globe-viz');
+            
+            globe = Globe()
+                (elem)
+                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+                .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+                .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
+                .pointsData(stations)
+                .pointLat('lat')
+                .pointLng('lng')
+                .pointColor(d => d.isPlaying ? '#10b981' : '#60a5fa')
+                .pointAltitude(d => d.isPlaying ? 0.12 : 0.05)
+                .pointRadius(d => d.isPlaying ? 0.9 : 0.4)
+                .pointResolution(16)
+                .onPointClick(point => {
+                    selectStation(point);
+                    globe.pointOfView({ lat: point.lat, lng: point.lng, altitude: 1.8 }, 1500);
+                })
+                .ringsData([])
+                .ringColor(() => t => `rgba(16, 185, 129, ${1 - t})`)
+                .ringMaxRadius(5)
+                .ringPropagationSpeed(3)
+                .ringRepeatPeriod(800);
+
+            globe.controls().autoRotate = true;
+            globe.controls().autoRotateSpeed = 0.5;
+            globe.controls().enableZoom = true;
+            
+            const stopRotation = () => { globe.controls().autoRotate = false; };
+            elem.addEventListener('mousedown', stopRotation);
+            elem.addEventListener('touchstart', stopRotation, { passive: true });
+            
+            window.addEventListener('resize', () => {
+                globe.width(window.innerWidth).height(window.innerHeight);
+            });
+        }
+
+        function selectStation(point) {
+            stations.forEach(s => s.isPlaying = false);
+            point.isPlaying = true;
+            currentStation = point;
+            
+            globe.pointsData(stations);
+            globe.ringsData([point]);
+            
+            document.getElementById('station-name').textContent = point.name;
+            document.getElementById('station-country-text').textContent = `${point.country} ${point.countrycode ? '('+point.countrycode+')' : ''}`;
+            document.getElementById('station-tags').textContent = `#${point.tags.replace(/,/g, ' #').substring(0, 60)}`;
+            
+            const favicon = document.getElementById('station-favicon');
+            favicon.src = point.favicon;
+            favicon.onerror = () => { favicon.src = 'https://cdn-icons-png.flaticon.com/512/32/32223.png'; };
+            
+            document.getElementById('info-panel').classList.remove('translate-y-[150%]');
+            playAudio();
+        }
+
+        function playAudio() {
+            if (!currentStation) return;
+            
+            document.getElementById('status-text').textContent = 'Menghubungkan...';
+            document.getElementById('status-text').className = 'text-xs text-blue-400 font-medium';
+            
+            audioPlayer.src = currentStation.url;
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                updatePlayButton();
+            }).catch(e => {
+                console.error('Playback failed:', e);
+                document.getElementById('status-text').textContent = 'Gagal memutar (Stream offline/HTTPS)';
+                document.getElementById('status-text').className = 'text-xs text-red-400 font-medium';
+            });
+        }
+
+        function togglePlay() {
+            if (!currentStation) return;
+            
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                globe.ringsData([]);
+                currentStation.isPlaying = false;
+                globe.pointsData(stations);
+            } else {
+                audioPlayer.play();
+                isPlaying = true;
+                currentStation.isPlaying = true;
+                globe.pointsData(stations);
+                globe.ringsData([currentStation]);
+            }
+            updatePlayButton();
+        }
+
+        function updatePlayButton() {
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            const indicator = document.getElementById('playing-indicator');
+            const statusText = document.getElementById('status-text');
+            
+            if (isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+                indicator.classList.remove('hidden');
+                statusText.textContent = 'Sedang memutar';
+                statusText.className = 'text-xs text-emerald-400 font-medium';
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+                indicator.classList.add('hidden');
+                statusText.textContent = 'Dijeda';
+                statusText.className = 'text-xs text-gray-400 font-medium';
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('play-btn').addEventListener('click', togglePlay);
+        
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (!query) {
+                globe.pointsData(stations);
+                return;
+            }
+            
+            const filtered = stations.filter(s => 
+                s.name.toLowerCase().includes(query) || 
+                s.country.toLowerCase().includes(query) ||
+                s.countrycode.toLowerCase().includes(query) ||
+                s.tags.toLowerCase().includes(query)
+            );
+            
+            globe.pointsData(filtered);
+            
+            if (filtered.length === 1) {
+                globe.pointOfView({ lat: filtered[0].lat, lng: filtered[0].lng, altitude: 1.8 }, 1500);
+                setTimeout(() => selectStation(filtered[0]), 500);
+            }
+        });
+
+        document.getElementById('random-btn').addEventListener('click', () => {
+            if (stations.length === 0) return;
+            const randomStation = stations[Math.floor(Math.random() * stations.length)];
+            globe.pointOfView({ lat: randomStation.lat, lng: randomStation.lng, altitude: 1.8 }, 2000);
+            setTimeout(() => selectStation(randomStation), 1000);
+        });
+
+        document.getElementById('close-panel').addEventListener('click', () => {
+            document.getElementById('info-panel').classList.add('translate-y-[150%]');
+            audioPlayer.pause();
+            isPlaying = false;
+            
+            if (currentStation) {
+                currentStation.isPlaying = false;
+                globe.pointsData(stations);
+            }
+            globe.ringsData([]);
+            updatePlayButton();
+        });
+
+        audioPlayer.addEventListener('error', () => {
+            document.getElementById('status-text').textContent = 'Stream tidak tersedia';
+            document.getElementById('status-text').className = 'text-xs text-red-400 font-medium';
+            isPlaying = false;
+            updatePlayButton();
+            globe.ringsData([]);
+            if (currentStation) {
+                currentStation.isPlaying = false;
+                globe.pointsData(stations);
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
